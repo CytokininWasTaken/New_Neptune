@@ -15,4 +15,5 @@ if not modloader.checkFlag("NN_NoTitle") then
   local sprTitle = Sprite.load("spr/NN_title", 1, 205, 44)
 	local sprTitleV = Sprite.find("sprTitle", "vanilla")
 	sprTitleV:replace(sprTitle)
+
 end

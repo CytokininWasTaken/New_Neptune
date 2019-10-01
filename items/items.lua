@@ -1,9 +1,7 @@
 print("Items loaded.")
 --
-require("items.flippers")
-require("items.wire")
-require("items.accelerator")
-require("items.emergencypower")
-require("items.umbraessence")
-require("items.cursedscepter")
-require("items.suctionboots")
+local items = {"flippers", "wire", "accelerator", "emergencypower", "umbraessence", "cursedscepter", "suctionboots", "stropharia",}
+
+for _, v in ipairs(items) do
+  require("items."..v)
+end
