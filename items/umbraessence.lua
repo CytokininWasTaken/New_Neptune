@@ -29,6 +29,7 @@ end
 
 local umbraAttack = function(player)
   local pNN = player:getData()
+  misc.shakeScreen(2)
   player:fireExplosion(player.x + (19 * player.xscale), player.y, 1.5, 1, 3.5)
   pNN.umbra.subimage = pNN.umbra.subimage + 1
 end
@@ -39,6 +40,7 @@ registercallback("onStageEntry", function()
     pNN.umbra = {}
     pNN.umbra.draw = false
     pNN.umbra.subimage = 0
+    pNN.umbra.exhausted = false
   end
 
   graphics.bindDepth(-7, drawUmbra)
@@ -47,11 +49,15 @@ end)
 registercallback("onPlayerStep", function(stepplayer)
   for _, player in ipairs(Object.find("P"):findAll()) do
     local pNN = player:getData()
+    if player:getAlarm(4) == -1 then
+      pNN.umbra.exhausted = false
+    end
     if player:countItem(item) > 0 then
-      if player:get("c_skill") == 1 and player:getAlarm(4) == -1 then
+      if player:get("activity") == 3 and pNN.umbra.exhausted == false then
         if pNN.umbra.subimage == 0 then
           pNN.umbra.subimage, pNN.umbra.draw = 1, true
         end
+        pNN.umbra.exhausted = true
       end
       if stepplayer == player then
         if pNN.umbra.subimage >= 8 then pNN.umbra.subimage, pNN.umbra.draw = 0, false elseif pNN.umbra.subimage == 4 then umbraAttack(player) elseif pNN.umbra.subimage > 0 then pNN.umbra.subimage = pNN.umbra.subimage + 0.25 end

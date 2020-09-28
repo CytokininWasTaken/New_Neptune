@@ -4,5 +4,12 @@
 	"internalname": "NewNeptune",
     "version": "1.0",
     "author": "Assa",
-    "mpcompat":  true
+    "mpcompat":  true,
+    "dependencies": [
+        {
+            "name": "Starstorm",
+            "version": "1.7.0",
+            "optional": true
+        }
+    ]
 }

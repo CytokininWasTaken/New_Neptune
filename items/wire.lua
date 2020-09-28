@@ -1,7 +1,6 @@
 local item = Item("Collaborative Power Line")
 item.pickupText = "Do your part!\nDrag cable behind you that tethers itself to the first ally that touches it.\nActivates for N seconds upon killing an enemy."
 
-local collisTesterSprite = Sprite.load("spr/collis", 1, 1, 1)
 item.sprite = Sprite.load("items/spr/wire", 1, 12, 15)
 
 local particleElectric = ParticleType.new("particleElectric")
@@ -10,7 +9,7 @@ particleElectric:size(0.25, 0.25, 0, 0)
 particleElectric:life(5, 5)
 particleElectric:color(Color.fromRGB(140, 185, 215), Color.WHITE)
 
-item:setTier("common")
+item:setTier("uncommon")
 
 local wireDots = 24
 local followDistance = wireDots / 5
@@ -23,7 +22,6 @@ for i = 0, 20 do
 
 end
 
-local calcDistance = function(x1, y1, x2, y2) return math.sqrt((x2 - x1) ^ 2 + (y2 - y1) ^ 2) end
 
 local correctDots = function(player)
   local pNN, pNNw = player:getData(), player:getData().wire
@@ -108,7 +106,7 @@ local pickupcode = function(player)
 end
 
 registercallback("onStageEntry", function()
-  
+
   local depth
   if Stage.getCurrentStage().displayName == "Dried Lake" then depth = 12 else depth = -5 end
     graphics.bindDepth(depth, drawDots)
@@ -138,7 +136,6 @@ registercallback("onPlayerStep", function(player)
     end
 
       if pNN.wireActive and pNN.wireActive > 0 then
-        player:set("level", (pNN.wireActive / 60))
         pNN.wireActive = pNN.wireActive - 1
         if not pNN.wireTimer then pNN.wireTimer = 0 elseif pNN.wireTimer > pNN.wireMaxDots * 2 - 2 then pNN.wireTimer = 0 else pNN.wireTimer = pNN.wireTimer + 1 end
             for i = 1, pNN.wireMaxDots, 20 do

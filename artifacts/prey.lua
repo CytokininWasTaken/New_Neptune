@@ -1,4 +1,16 @@
-local calcDistanceSpots = function(x1, y1, x2, y2) return math.sqrt((x2 - x1) ^ 2 + (y2 - y1) ^ 2) end
+local prey = Artifact.new("Prey")
+prey.unlocked = true
+
+prey.loadoutSprite = Sprite.load("artifacts/spr/prey.png", 2, 18, 18)
+prey.loadoutText = "Something is attracted to you gaining power."
+
+callback("onStep", function()
+  if prey.active then
+    misc.setTimeStop(5)
+  end
+end)
+
+--[[local calcDistanceSpots = function(x1, y1, x2, y2) return math.sqrt((x2 - x1) ^ 2 + (y2 - y1) ^ 2) end
 local calcDistanceInsts = function(i1, i2) return math.sqrt((i2.x - i1.x) ^ 2 + (i2.x - i1.x) ^ 2) end
 
 local prey = Artifact.new("Prey")
@@ -57,3 +69,4 @@ registercallback("onPlayerDraw", function(player)
     end
   end
 end)
+]]

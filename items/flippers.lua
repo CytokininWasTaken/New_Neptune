@@ -96,7 +96,7 @@ end)
 -- Set the log for the item, just like the first example item
 item:setLog{
 	group = "use",
-	description = "Gives the passive ability to swim.\nUse to dump the water from the flippers, creating swimmable water.",
+	description = "Gives the &b&passive ability to swim&!&. Use to &b&dump swimmable water&!& from the flippers.",
 	story = "Okay, these are really confusing. Somehow, they're filled with an infinite amount of water, or at least a seemingly infinite amount?\nI thought, however, that if anyone could make use out of these, it's you.",
 	destination = "Prima Crater Hydroelectronics,\nKalmar II,\nNew Neptune",
 	date = "1/27/2002"

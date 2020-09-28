@@ -2,7 +2,7 @@ local item = Item("Suction Boots")
 item.pickupText = "Lets you walk up walls."
 
 item.sprite = Sprite.load("items/spr/suctionboots.png", 1, 12, 15)
-item:setTier("rare")
+item:setTier("uncommon")
 
 registercallback("onPlayerInit", function(player)
   local pNN = player:getData()
@@ -13,6 +13,7 @@ end)
 local timer = 0
 
 registercallback("onPlayerStep", function(player)
+
   local pNN = player:getData()
   if not pNN.suction.sprite then
     pNN.suction.sprite = player:getAnimation("walk")
@@ -26,13 +27,16 @@ registercallback("onPlayerStep", function(player)
       if player:control(checkstr) == 2 then
         player.alpha = 0
         pNN.suction.draw = true
-        player:set("pVspeed", -2)
+        player:set("pVspeed", -math.clamp((1.5 + (0.2 * (player:countItem(item) - 1))), 0, 15))
+      else
+        if player:get("pVspeed") < 0 then player:set("pVspeed", 0) end
       end
-
     else
-      player.angle = 0
-      player.alpha = 1
+      if player.alpha == 0 and pNN.suction.draw == true then player.alpha = 1 end
       pNN.suction.draw = false
+      player.angle = 0
+
+
     end
   end
 end)

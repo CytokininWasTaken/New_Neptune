@@ -1,7 +1,9 @@
 print("Items loaded.")
 --
-local items = {"flippers", "wire", "accelerator", "emergencypower", "umbraessence", "cursedscepter", "suctionboots", "stropharia",}
+local items = {"mechsuit", "flippers", "wire", "accelerator", "emergencypower", "umbraessence", "cursedphylactery", "suctionboots", "stropharia", "crystalblood", "spool", "necrovial", "insurancepaper", "orrery"}
 
 for _, v in ipairs(items) do
-  require("items."..v)
+  if not modloader.checkFlag("NN_DisableItem_"..v) then
+    require("items."..v)
+  end
 end
