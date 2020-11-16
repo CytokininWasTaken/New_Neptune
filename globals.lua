@@ -34,14 +34,14 @@ end)
 puffball = Object.new("Puffball")
 puffball.sprite = Sprite.load("survivors/spr/fungus/puffball", 1, 2, 2)
 
-puffball:addCallback("create", function(self)
-	local pbt = self:getData()
-	pbt.vspeed, pbt.vgrav = 1, 0.1
-	if pbt.parent then pbt.damage = pbt.parent:get("damage") end
-end)
-
 puffball:addCallback("step", function(self)
 	local pbt = self:getData()
+
+  if not pbt.set then
+  	pbt.vspeed, pbt.vgrav = 1, 0.1
+  	if pbt.parent then pbt.damage = pbt.parent:get("damage") end
+    pbt.set = true
+  end
 	self.x = self.x + 3*self.xscale
 	self.y = self.y - pbt.vspeed
 	pbt.vspeed = pbt.vspeed - pbt.vgrav

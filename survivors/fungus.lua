@@ -213,7 +213,6 @@ end)
 registercallback("onPlayerDraw", function(player)
 	local pNN = player:getData()
 
-
 	if charge > 0 and not mpCtrl(player, 2) == input.HELD then player.alpha, charge, pNN.fungus.drawChargeCounter = 1, 0, 0 end
 	if pNN.fungus and pNN.fungus.isFungus and player:get("activity") == 0 and player:getAlarm(3) == -1 then
 		if mpCtrl(player, 2) == input.HELD and charge < 100 then

@@ -4,6 +4,8 @@
 
 local magnet = Survivor.new("P0-L4R")
 
+
+
 -- Load all of our sprites into a table
 local sprites = {
 	idle = Sprite.load("polar_idle", "survivors/spr/polarity/idle", 1, 14, 19),
@@ -158,6 +160,43 @@ end
 
 local magnetSprite = Sprite.load("polar_magnet", "survivors/spr/polarity/hands", 2, 4, 8)
 
+local hand = Object.new("polarHand")
+hand.sprite = magnetSprite
+
+hand:addCallback("step", function(self)
+	data = self:getData()
+	self.subimage = data.subimage
+	self.angle = data.angle
+	self.xscale = data.xscale
+end)
+
+local ropeObject = Object.new("physicsRope")
+local rope = {}
+rope.ropes = {}
+rope.new = function(name, segmentCount, attachmentPoint, pullStrength, pullMaxDistance, thickness, colour)
+	rope.ropes[name] = {segmentCount = segmentCount, attachmentPoint = attachmentPoint, pullStrength = pullStrength, pullMaxDistance = pullMaxDistance, thickness = thickness, colour = colour}
+	return rope.ropes[name]
+end
+rope.create = function(name)
+	r = rope.ropes
+	if r[name] then
+		ropeInst = ropeObject:create(attachmentPoint.x, attachmentPoint.y)
+		ropeData = ropeInst:getData()
+		ropeData.info = r[name]
+		ropeData.points = {}
+		for i = 1, r[name].segmentCount do
+			table.insert(ropeData.points, {attachmentPoint.x, attachmentPoint.y})
+		end
+	end
+end
+ropeObject:addCallback("step", function(self)
+	data = self:getData()
+end)
+ropeObject:addCallback("draw", function(self)
+	data = self:getData()
+end)
+
+local bbbX, bbbY
 local function dotStep(tab, aX, aY, player, colour, magnetcol)
   for k, v in ipairs(tab) do
 		graphics.color(colour)
@@ -174,16 +213,23 @@ local function dotStep(tab, aX, aY, player, colour, magnetcol)
 			if k == #tab then
 				graphics.drawImage{
 					image = magnetSprite,
-					x = math.floor(v.x), y = math.floor(v.y - 2),
+					x = v.x-.5, y = (v.y-.5) - 2,
 					angle = calcAngleInsts(v, tab[k-4]) + 90,
 					subimage = magnetcol,
 				}
+				bbbX, bbbY = v.x-.5, (v.y-.5) - 2
 			end
     end
 
     --graphics.circle(v.x, v.y, 1)
   end
 end
+
+
+callback("onCameraUpdate", function()
+	local w,h = graphics.getGameResolution()
+	--camera.x, camera.y = (bbbX or 0) -w/2, (bbbY or 0) -h/2
+end)
 
 callback("onStageEntry", function()
 	for k, v in ipairs(misc.players) do
