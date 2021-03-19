@@ -39,7 +39,7 @@ and efficient use of &g&]]..droneName..[[&!& is crucial to offset its low fire r
 ]], sprites.skills)
 
 guard:setLoadoutSkill(1, "Elephant Gun",
-[[Fire your rifle for &5&250% damage&!&, hitting up to ]]..elephantMaxHit..[[ enemies.]])
+[[Fire your rifle for &y&250% damage&!&, hitting up to ]]..elephantMaxHit..[[ enemies.]])
 
 guard:setLoadoutSkill(2, "DISCHARGE()",
 [[&g&]]..droneName..[[&!& releases a ball of electricity that &r&explodes&!& for &y&500% damage&!&
@@ -177,7 +177,7 @@ guardDrone:addCallback("draw", function(self)
 			eT.velocity = 0
 			eT.angle = math.rad(15 + 75 * (-droneXscale + 1))
 			if selfTab.btb and selfTab.btb > 0 then
-				eT.angle = math.rad(0 + 90 * (-droneXscale + 1))
+				eT.angle = math.rad(5 + 90 * (-droneXscale + 1))
 			end
 		elseif relevantFrame == 5 and electric and electric:isValid() then
 			electric:getData().velocity = 2.2
@@ -248,7 +248,6 @@ guard:addCallback("useSkill", function(player, skill)
 				mDroneTab.xLock = {pNN.tG.mDrone.x, pNN.tG.mDrone.y}
 				subImgCounter = 1
 			end
-			print("drone X shoot")
 		elseif skill == 4 then
 			-- V skill
 			--player:survivorActivityState(4, sprites.shoot1, 0.25, true, true)

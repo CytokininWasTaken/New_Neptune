@@ -24,7 +24,7 @@ item:addCallback("use", function(player, embryo)
 
 end)
 
-registercallback("onPlayerStep", function(player)
+  registercallback("onPlayerStep", function(player)
   if player.useItem == item then
     if not timer then local timer = 0 elseif timer > s.stepRate - 2 then timer = 0 else timer = timer + 1 end
 
@@ -125,7 +125,7 @@ item:setTier("use")
 item.pickupText = "Activate to rewind your position in time by "..tostring(s.rewindLength).." seconds."
 
 item:setLog{
-	group = "end",
+	group = "use",
 	description = "Activate to rewind your position in time by &b&"..tostring(s.rewindLength).." seconds&!&.",
 	story = "Figuring out how to grab this thing was a hassle. \nEach time I touched it, I got sent back to the mouth of the cave, seemingly dislodged from my path in time.\nIt even healed the wounds I attained each time I tried to claim it, so I stand by the price you called 'outrageous'.",
 	destination = "Reinhold Manor,\nWarden's Well\nNew Neptune",

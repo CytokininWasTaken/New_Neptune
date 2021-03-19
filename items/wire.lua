@@ -197,7 +197,7 @@ registercallback("onNPCDeathProc", function(dead, player)
 end)
 
 item:setLog{
-	group = "end",
+	group = "uncommon",
 	description = "Extends a power line behind yourself that tethers to allies. &b&Goes live upon killing an enemy.",
 	story = "What's more effective than hiring an electrician to lay power lines down the mines?\nEmploying your miners, of course, through a mixture of bribes and threats.\nJust a thought, in case you feel like saving cash when the time comes.\n\n--Stu Ruther",
 	destination = "ERR: DATA MISSING",

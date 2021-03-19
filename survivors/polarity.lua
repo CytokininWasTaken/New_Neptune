@@ -55,6 +55,8 @@ magnet.endingQuote = "..and as it left, every compass on the planet snapped back
 -- The sprite displayed on the multiplayer select menu
 magnet.idleSprite = sprites.idle
 
+
+
 -- Called when the player is created
 magnet:addCallback("init", function(player)
   local pT = player:getData()
@@ -171,29 +173,88 @@ hand:addCallback("step", function(self)
 end)
 
 local ropeObject = Object.new("physicsRope")
+ropeObject.sprite = collisTesterSprite
 local rope = {}
 rope.ropes = {}
-rope.new = function(name, segmentCount, attachmentPoint, pullStrength, pullMaxDistance, thickness, colour)
-	rope.ropes[name] = {segmentCount = segmentCount, attachmentPoint = attachmentPoint, pullStrength = pullStrength, pullMaxDistance = pullMaxDistance, thickness = thickness, colour = colour}
+rope.new = function(name, segmentCount, pullStrength, pullMaxDistance, gravity, thickness, colour, endPiece, debug)
+	rope.ropes[name] = {segmentCount = segmentCount, pullStrength = pullStrength, pullMaxDistance = pullMaxDistance, gravity = gravity, thickness = thickness, colour = colour, endPiece = endPiece, debug = debug}
 	return rope.ropes[name]
 end
-rope.create = function(name)
+rope.create = function(name, x, y)
 	r = rope.ropes
 	if r[name] then
-		ropeInst = ropeObject:create(attachmentPoint.x, attachmentPoint.y)
-		ropeData = ropeInst:getData()
+		local ropeInst = ropeObject:create(x, y)
+		local ropeData = ropeInst:getData()
+		if not data.attachmentPoint then data.attachmentPoint = {x=x,y=y} end
 		ropeData.info = r[name]
 		ropeData.points = {}
 		for i = 1, r[name].segmentCount do
-			table.insert(ropeData.points, {attachmentPoint.x, attachmentPoint.y})
+			table.insert(ropeData.points, {x, y})
 		end
+		return ropeInst
 	end
 end
 ropeObject:addCallback("step", function(self)
 	data = self:getData()
+	self.x, self.y = data.attachmentPoint.player.x + data.attachmentPoint.xOffset, data.attachmentPoint.player.y  + data.attachmentPoint.yOffset
+	for i, dot in ipairs(data.points) do
+		if i == 1 then
+			data.points[i][1], data.points[i][2] = self.x, self.y
+		elseif i <= #data.points then
+			deltaX, deltaY = data.points[i-1][1] - data.points[i][1], data.points[i-1][2] - data.points[i][2]
+			dist = calcDistanceInsts({x=data.points[i][1],y=data.points[i][2]},{x=data.points[i-1][1],y=data.points[i-1][2]})
+			if dist > data.info.pullMaxDistance then
+				data.points[i][1] = (data.points[i][1] + deltaX * data.info.pullStrength)
+				data.points[i][2] = (data.points[i][2] + deltaY * data.info.pullStrength)
+			end
+			local player = data.attachmentPoint.player
+			if not self:collidesMap(dot[1], dot[2] + 1) or (player:get("activity") == 30 and player:collidesMap(player.x, player.y) and calcDistanceInsts({x=dot[1],y=dot[2]}, player) < 10) then
+				data.points[i][2] = data.points[i][2] + data.info.gravity
+			end
+		end
+	end
 end)
+
+rope.new("frontArm", 15, 0.5, 2, 1.8, 2, Color.fromHex(0x5e838f), magnetSprite, false)
+rope.new("backArm", 15, 0.5, 2, 1.8, 2, Color.fromHex(0x5e838f), magnetSprite, false)
+
+
+callback("onPlayerStep", function(player)
+	data = player:getData()
+	if input.checkKeyboard("E") == input.PRESSED then
+		data.testingRope = rope.create("TestRope", player.x, player.y)
+	end
+	if data.testingRope and data.testingRope:isValid() then
+		data.testingRope:getData().attachmentPoint = {player = player, xOffset = 0, yOffset = 0}
+	end
+end)
+
+
 ropeObject:addCallback("draw", function(self)
 	data = self:getData()
+	for i, dot in ipairs(data.points) do
+		posx, posy = math.floor(dot[1]), math.floor(dot[2])
+		graphics.color(data.info.colour)
+		if data.info.debug then
+			graphics.print(i, posx, posy - 20 -(10*i))
+			graphics.alpha(0.3)
+			graphics.line(posx, posy, posx, posy- 15 -(10*i))
+			graphics.alpha(1)
+		end
+		if i > 1 then
+			graphics.line(posx, posy, math.floor(data.points[i-1][1]), math.floor(data.points[i-1][2]), data.info.thickness)
+		end
+		if i == #data.points then
+			if data.info.endPiece then
+				graphics.drawImage{
+					image = data.info.endPiece,
+					x = posx, y = posy-1,
+					angle = calcAngleInsts({x=dot[1],y=dot[2]}, {x=data.points[i-3][1],y=data.points[i-3][2]}) + 90,
+					subimage = 1,
+				}
+			end
+		end
+	end
 end)
 
 local bbbX, bbbY

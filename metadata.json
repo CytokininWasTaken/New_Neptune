@@ -1,6 +1,6 @@
 {
     "name": "New Neptune",
-    "description": "yaaa.",
+    "description": "hehe.",
 	"internalname": "NewNeptune",
     "version": "1.0",
     "author": "Assa",
@@ -10,6 +10,6 @@
             "name": "Starstorm",
             "version": "1.7.0",
             "optional": true
-        }
+        },
     ]
 }

@@ -136,7 +136,7 @@ spawnmanager:addCallback("draw", function(self)
 		if selftab.timer > selftab.sprite.frames then
 			local spawned = selftab.obj:create(self.x, self.y)
 			spawned:set("team", selftab.player:get("team"))
-			spawned:applyBuff(fungalDecay, 29 / fungalDecaySpeed)
+			--spawned:applyBuff(fungalDecay, 29 / fungalDecaySpeed)
 			table.insert(resurrected, spawned)
 			self:destroy()
 		end

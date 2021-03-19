@@ -41,7 +41,7 @@ end)
 -- Set the log for the item, just like the first example item
 item:setLog{
 	group = "common",
-	description = "&r&Narrowly dodging attacks &g&heals you&!&.",
+	description = "&b&Narrowly dodging attacks &y&pays you&!&.",
 	story = "Of course, Betsy, I'm sure we can work something out. But are you sure you need this?\nI mean, you haven't gotten so much as a rash in twenty years!",
 	destination = "Saint Peter Retirement Home,\nOld New York,\nEarth",
 	date = ""
