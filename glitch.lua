@@ -84,7 +84,7 @@ end
 
 local glitchItem = {
   allItems = {},
-  settings = {hSplit = 3, vSplit = 6, framesToAdd = 7, animateSpeed = 0.1, glitchPrefix = "Entropic "},
+  settings = {hSplit = 1, vSplit = 1, framesToAdd = 7, animateSpeed = 0.1, glitchPrefix = "Entropic "},
   allGlitchSprites = {},
 }
 
@@ -121,12 +121,12 @@ function glitchItem.splitSprite(rawSprite)
       graphics.drawImage{
         x = 0, y = 0,
         image = sprite,
-        region = {
-          math.floor((hIter - 1) * partWidth),
-          math.floor((vIter - 1) * partHeight),
-          math.floor(hIter * partWidth) - math.floor((hIter - 1) * partWidth) - hExtra,
-          math.floor(vIter * partHeight) - math.floor((vIter - 1) * partHeight) - vExtra,
-        },
+        --region = {
+        --  math.floor((hIter - 1) * partWidth),
+        --  math.floor((vIter - 1) * partHeight),
+        --  math.floor(hIter * partWidth) - math.floor((hIter - 1) * partWidth) - hExtra,
+        --  math.floor(vIter * partHeight) - math.floor((vIter - 1) * partHeight) - vExtra,
+        --},
       }
       --graphics.resetChannels()
       table.insert(spriteParts, tSurface:createSprite(0,0))
@@ -138,7 +138,21 @@ function glitchItem.splitSprite(rawSprite)
   return spriteParts, origin
 end
 
-
+function glitchItem.reassemble(spriteParts, origin)
+  local hSplit, vSplit = glitchItem.settings.hSplit, glitchItem.settings.vSplit
+  local newSurface = Surface.new(spriteParts[1].width*hSplit,spriteParts[2].height*vSplit)
+  graphics.setTarget(newSurface)
+  local vLine = 0
+  local hLine = 0
+  for i, part in ipairs(spriteParts) do
+    part:draw(0 + hLine*part.width, 0 + vLine*part.height)
+    if hLine < hSplit then hLine = hLine + 1 else hLine, vLine = 0, vLine + 1 end
+  end
+  local madeSprite = newSurface:createSprite(0,0)
+  graphics.resetTarget()
+  newSurface:free()
+  return madeSprite
+end
 
 function glitchItem.animateSprite(parts, origin)
   local width, height = parts[1].width * (glitchItem.settings.hSplit), parts[1].height * (glitchItem.settings.vSplit)
@@ -169,7 +183,7 @@ function glitchItem.animateSprite(parts, origin)
       if horizontalOffset > glitchItem.settings.hSplit-1 then horizontalOffset, verticalOffset = 0, verticalOffset + 1 end
       local extraHorizontal = 0
       if whiteFrame == i and math.chance(50) then
-        graphics.setBlendMode("additive")
+        --graphics.setBlendMode("additive")
         for i = 1,2 do
           graphics.drawImage{
             image = sprite,
@@ -193,7 +207,7 @@ function glitchItem.animateSprite(parts, origin)
     end
     madeSprite:addFrame(tSurface)
     graphics.resetTarget()
-    graphics.setBlendMode("normal")
+    --graphics.setBlendMode("normal")
     tSurface:free()
   end
 
@@ -244,9 +258,22 @@ callback("onPlayerStep", function(player)
 
 end)
 
+callback("onPlayerDraw",function(player,x,y)
+  local itemtotest = "Life Savings"
+  --glitchItem.reassemble(glitchItem.splitSprite(Item.find(itemtotest).sprite)):draw(x, y - 20)
+end)
 
+iter = 1
+local allItems = {}
+callback("onPlayerStep", function(player)
+  if iter < (#allItems) or #allItems == 0 then
+    iter = iter + 1
 
-allItems = Item.findAll()
-for _, item in ipairs(allItems) do
-  glitchItem.make(item)
-end
+    if #allItems == 0 then allItems = Item.findAll() end
+    glitchItem.make(allItems[iter])
+    print("Made item: "..allItems[iter].displayName)
+  end
+  if input.checkKeyboard("V") == input.PRESSED then
+    table.random(glitchItem.allItems).item:create(player.x,player.y)
+  end
+end)
