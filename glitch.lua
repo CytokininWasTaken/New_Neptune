@@ -56,8 +56,13 @@ end)
 ---------------------------------------------
 ---------GLITCH---------------ITEMS----------
 ---------------------------------------------
+
+local surfacesMade = 0
+
 local function getSpriteFrame(sprite, frame)
   local tSurface = Surface.new(sprite.width, sprite.height)
+  surfacesMade = surfacesMade + 1
+  tSurface:clear()
   graphics.setTarget(tSurface)
   graphics.drawImage{image = sprite,
     x = sprite.xorigin, y = sprite.yorigin, subimage = frame}
@@ -82,14 +87,16 @@ local function corruptString(string, chance)
   return newString
 end
 
-local glitchItem = {
+local glitchHandler = {
   allItems = {},
-  settings = {hSplit = 1, vSplit = 1, framesToAdd = 7, animateSpeed = 0.1, glitchPrefix = "Entropic "},
+  settings = {hSplit = 3, vSplit = 6, framesToAdd = 7, animateSpeed = 0.1, glitchPrefix = "Entropic "},
   allGlitchSprites = {},
 }
 
-function glitchItem.splitSprite(rawSprite)
+function glitchHandler.splitSprite(rawSprite)
   local smallSurface = Surface.new(rawSprite.width, rawSprite.height)
+  surfacesMade = surfacesMade + 1
+  smallSurface:clear()
   graphics.setTarget(smallSurface)
   rawSprite:draw(rawSprite.xorigin, rawSprite.yorigin)
   local sprite = smallSurface:createSprite(0,0)
@@ -99,181 +106,267 @@ function glitchItem.splitSprite(rawSprite)
 
   local width, height = sprite.width, sprite.height
   local xAdded, yAdded = 0, 0
-  while width % glitchItem.settings.hSplit ~= 0 do
+  while width % glitchHandler.settings.hSplit ~= 0 do
     width = width + 1
     xAdded = xAdded + 1
   end
-  while height % glitchItem.settings.vSplit ~= 0 do
+  while height % glitchHandler.settings.vSplit ~= 0 do
     height = height + 1
     yAdded = yAdded + 1
   end
   --print(sprite.width, sprite.height, width, height)
-  local partWidth, partHeight = width/glitchItem.settings.hSplit, height/glitchItem.settings.vSplit
+  local partWidth, partHeight = width/glitchHandler.settings.hSplit, height/glitchHandler.settings.vSplit
 
   spriteParts = {}
-  for vIter = 1, glitchItem.settings.vSplit do
-    for hIter = 1, glitchItem.settings.hSplit do
-      local tSurface = Surface.new(partWidth, partHeight)
+  local tSurface = Surface.new(partWidth, partHeight)
+  surfacesMade = surfacesMade + 1
+  for vIter = 1, glitchHandler.settings.vSplit do
+    for hIter = 1, glitchHandler.settings.hSplit do
+      tSurface:clear()
       graphics.setTarget(tSurface)
       local hExtra, vExtra = 0,0
-      if hIter == glitchItem.settings.hSplit then hExtra = xAdded end
-      if vIter == glitchItem.settings.vSplit then vExtra = yAdded end
+      if hIter == glitchHandler.settings.hSplit then hExtra = xAdded end
+      if vIter == glitchHandler.settings.vSplit then vExtra = yAdded end
       graphics.drawImage{
         x = 0, y = 0,
         image = sprite,
-        --region = {
-        --  math.floor((hIter - 1) * partWidth),
-        --  math.floor((vIter - 1) * partHeight),
-        --  math.floor(hIter * partWidth) - math.floor((hIter - 1) * partWidth) - hExtra,
-        --  math.floor(vIter * partHeight) - math.floor((vIter - 1) * partHeight) - vExtra,
-        --},
+        region = {
+          math.floor((hIter - 1) * partWidth),
+          math.floor((vIter - 1) * partHeight),
+          math.floor(hIter * partWidth) - math.floor((hIter - 1) * partWidth) - hExtra,
+          math.floor(vIter * partHeight) - math.floor((vIter - 1) * partHeight) - vExtra,
+        },
       }
-      --graphics.resetChannels()
+      graphics.resetChannels()
       table.insert(spriteParts, tSurface:createSprite(0,0))
       graphics.resetTarget()
-      tSurface:free()
     end
   end
+  tSurface:free()
   sprite:delete()
   return spriteParts, origin
 end
 
-function glitchItem.reassemble(spriteParts, origin)
-  local hSplit, vSplit = glitchItem.settings.hSplit, glitchItem.settings.vSplit
-  local newSurface = Surface.new(spriteParts[1].width*hSplit,spriteParts[2].height*vSplit)
-  graphics.setTarget(newSurface)
-  local vLine = 0
-  local hLine = 0
-  for i, part in ipairs(spriteParts) do
-    part:draw(0 + hLine*part.width, 0 + vLine*part.height)
-    if hLine < hSplit then hLine = hLine + 1 else hLine, vLine = 0, vLine + 1 end
+function glitchHandler.glitchFrame(parts, origin, surface, whiteFrame,madeSprite)
+  surface:clear()
+  graphics.setTarget(surface)
+  --
+  horizontalOffset, verticalOffset = 0, 0
+  lineOffsets = {
+    [math.random(0,glitchHandler.settings.vSplit)] = {offset = math.random(-10, 10)},
+    [math.random(0,glitchHandler.settings.vSplit)] = {offset = math.random(-10, 10)},
+  }
+  for i2, sprite in ipairs(parts) do
+    if horizontalOffset > glitchHandler.settings.hSplit-1 then horizontalOffset, verticalOffset = 0, verticalOffset + 1 end
+    local extraHorizontal = 0
+    if whiteFrame == i and math.chance(50) then
+      --graphics.setBlendMode("additive")
+      for i = 1,2 do
+        graphics.drawImage{
+          image = sprite,
+          x = 10 + horizontalOffset*sprite.width + extraHorizontal + math.random(-2,2),
+          y = 10 + verticalOffset*sprite.height + math.random(-2,2),
+          color = Color.fromRGB(math.random(255),math.random(255),math.random(255))
+        }
+      end
+    elseif lineOffsets[verticalOffset] then
+      col = lineOffsets[verticalOffset].colours
+      graphics.setChannels(math.chance(50), math.chance(50), math.chance(50), true)
+      extraHorizontal = lineOffsets[verticalOffset].offset
+    end
+    graphics.drawImage{
+      image = sprite,
+      x = 10 + horizontalOffset*sprite.width + extraHorizontal,
+      y = 10 + verticalOffset*sprite.height,
+    }
+    graphics.resetChannels()
+    horizontalOffset = horizontalOffset + 1
   end
-  local madeSprite = newSurface:createSprite(0,0)
+  if madeSprite then madeSprite:addFrame(surface) end
+
   graphics.resetTarget()
-  newSurface:free()
-  return madeSprite
+  return surface:createSprite(origin.x+10,origin.y+10)
 end
 
-function glitchItem.animateSprite(parts, origin)
-  local width, height = parts[1].width * (glitchItem.settings.hSplit), parts[1].height * (glitchItem.settings.vSplit)
+function glitchHandler.animateSprite(parts, origin, framesToAdd)
+  local separatedTableA = {}
+  local width, height = parts[1].width * (glitchHandler.settings.hSplit), parts[1].height * (glitchHandler.settings.vSplit)
   local assemble = Surface.new(width+20, height+20)
+  surfacesMade = surfacesMade + 1
+  assemble:clear()
   graphics.setTarget(assemble)
   ---
   local horizontalOffset, verticalOffset = 0, 0
   for i, sprite in ipairs(parts) do
-    if horizontalOffset > glitchItem.settings.hSplit-1 then horizontalOffset, verticalOffset = 0, verticalOffset + 1 end
+    if horizontalOffset > glitchHandler.settings.hSplit-1 then horizontalOffset, verticalOffset = 0, verticalOffset + 1 end
     sprite:draw(10 + horizontalOffset*sprite.width, 10 + verticalOffset*sprite.height)
     horizontalOffset = horizontalOffset + 1
   end
   ---
   local madeSprite = assemble:createSprite(origin.x+10,origin.y+10)
+
+  table.insert(separatedTableA,assemble:createSprite(origin.x+10,origin.y+10))
   graphics.resetTarget()
   assemble:free()
-  local whiteFrame = math.random(1, glitchItem.settings.framesToAdd)
-  for i = 1, glitchItem.settings.framesToAdd do
-    tSurface = Surface.new(width+20, height+20)
-    graphics.setTarget(tSurface)
-    --
-    horizontalOffset, verticalOffset = 0, 0
-    lineOffsets = {
-      [math.random(0,glitchItem.settings.vSplit)] = {offset = math.random(-10, 10)},
-      [math.random(0,glitchItem.settings.vSplit)] = {offset = math.random(-10, 10)},
+  local whiteFrame = math.random(1, glitchHandler.settings.framesToAdd)
+  local tSurface = Surface.new(width+20, height+20)
+  surfacesMade = surfacesMade + 1
+
+  for i = 1, glitchHandler.settings.framesToAdd do
+    table.insert(separatedTableA, glitchHandler.glitchFrame(parts,origin,tSurface,whiteFrame,madeSprite))
+  end
+
+  tSurface:free()
+
+  local separatedTableB = {}
+  for i, sprite in ipairs(separatedTableA) do
+    local done = sprite:finalise("NN_Glitch_"..(#glitchHandler.allGlitchSprites-1).."_"..i)
+    table.insert(separatedTableB, done)
+  end
+
+  local doneSprite = madeSprite:finalise("NN_Glitch_"..#glitchHandler.allGlitchSprites)
+  table.insert(glitchHandler.allGlitchSprites, doneSprite)
+  return doneSprite, separatedTableB
+end
+
+
+function glitchHandler.makeItem(item)
+  local foundItem = Item.find(glitchHandler.settings.glitchPrefix..item.displayName)
+  if not foundItem then
+    local madeItem = Item.new(glitchHandler.settings.glitchPrefix..item.displayName)
+    madeItem.sprite, individualSpriteTable = glitchHandler.animateSprite(glitchHandler.splitSprite(item.sprite))
+
+    madeItem.isUseItem = item.isUseItem
+    madeItem.color = Color.fromHex(0x99F4D2)
+    madeItem.pickupText = corruptString(item.pickupText, 33)
+    madeItem.displayName = corruptString(glitchHandler.settings.glitchPrefix..item.displayName, 25)
+    local obj = madeItem:getObject()
+    obj:addCallback("step", function(self)
+      local data = self:getData()
+      data.subimage = (data.subimage or 0) + glitchHandler.settings.animateSpeed
+      self.subimage = data.subimage
+    end)
+
+    glitchHandler.allItems[#glitchHandler.allItems+1] = {
+      item = madeItem,
+      baseItem = item,
+      sprites = individualSpriteTable,
+      trueDescription = item.pickupText,
+      trueName = glitchHandler.settings.glitchPrefix..item.displayName,
     }
-    for i2, sprite in ipairs(parts) do
-      if horizontalOffset > glitchItem.settings.hSplit-1 then horizontalOffset, verticalOffset = 0, verticalOffset + 1 end
-      local extraHorizontal = 0
-      if whiteFrame == i and math.chance(50) then
-        --graphics.setBlendMode("additive")
-        for i = 1,2 do
-          graphics.drawImage{
-            image = sprite,
-            x = 10 + horizontalOffset*sprite.width + extraHorizontal + math.random(-2,2),
-            y = 10 + verticalOffset*sprite.height + math.random(-2,2),
-            color = Color.fromRGB(math.random(255),math.random(255),math.random(255))
-          }
-        end
-      elseif lineOffsets[verticalOffset] then
-        col = lineOffsets[verticalOffset].colours
-        graphics.setChannels(math.chance(50), math.chance(50), math.chance(50), true)
-        extraHorizontal = lineOffsets[verticalOffset].offset
-      end
-      graphics.drawImage{
-        image = sprite,
-        x = 10 + horizontalOffset*sprite.width + extraHorizontal,
-        y = 10 + verticalOffset*sprite.height,
-      }
-      graphics.resetChannels()
-      horizontalOffset = horizontalOffset + 1
-    end
-    madeSprite:addFrame(tSurface)
+
+    foundItem = madeItem
+  end
+
+  return foundItem
+end
+
+function glitchHandler.updateItemCounts(player)
+
+end
+
+function glitchHandler.glitchAnimatedImage(image)
+  local separatedImages = {}
+  local xOrigin, yOrigin = image.xorigin, image.yorigin
+  local tSurface = Surface.new(image.width,image.height)
+  for i = 1, image.frames do
+    tSurface:clear()
+    graphics.setTarget(tSurface)
+
+    graphics.drawImage{
+      image = image,
+      x = xOrigin, y = yOrigin,
+      subimage = i,
+    }
+
+    table.insert(separatedImages, tSurface:createSprite(xOrigin,yOrigin))
     graphics.resetTarget()
-    --graphics.setBlendMode("normal")
-    tSurface:free()
+    tSurface:clear()
   end
+  local newSprite
+  for k, sprite in ipairs(separatedImages) do
+    graphics.setTarget(tSurface)
+    tSurface:clear()
 
-  doneSprite = madeSprite:finalise("NN_Glitch_"..#glitchItem.allGlitchSprites)
-  table.insert(glitchItem.allGlitchSprites, doneSprite)
-  return doneSprite
-end
 
-
-function glitchItem.make(item)
-  local madeItem = Item.new(glitchItem.settings.glitchPrefix..item.displayName)
-  madeItem.sprite = glitchItem.animateSprite(glitchItem.splitSprite(item.sprite))
-
-  madeItem.color = Color.fromHex(0x99F4D2)
-  madeItem.pickupText = corruptString(item.pickupText, 33)
-  madeItem.displayName = corruptString(glitchItem.settings.glitchPrefix..item.displayName, 25)
-  local obj = madeItem:getObject()
-
-  obj:addCallback("step", function(self)
-    local data = self:getData()
-    data.subimage = (data.subimage or 0) + glitchItem.settings.animateSpeed
-    self.subimage = data.subimage
-  end)
-
-  individualSpriteTable = {}
-  for i = 1, madeItem.sprite.frames do
-    individualSpriteTable[i] = getSpriteFrame(madeItem.sprite, i)
+    if not newSprite then newSprite = "" end
   end
-  glitchItem.allItems[#glitchItem.allItems+1] = {item = madeItem, baseItem = item, sprites = individualSpriteTable, trueDescription = item.pickupText, trueName = glitchItem.settings.glitchPrefix..item.displayName}
 end
 
-function glitchItem.updateCounts(player)
+glitchHandler.glitchBurstParticle = ParticleType.new("glitchBurstParticle")
+local t = glitchHandler.glitchBurstParticle
+t:shape("disc")
+t:direction(0,60,5,1)
+t:speed(0,0,0,0)
+t:size(0.12, 0.12, 0, 0)
 
+function glitchHandler.corruptItem(instance)
+  if isa(instance, "ItemInstance") then
+    local baseItem = instance:getItem()
+    local newItem = glitchHandler.makeItem(baseItem)
+    local x, y = instance.x, instance.y
+    local acc = instance:getAccessor()
+    local owner, yy, pGravity, pVspeed = acc.owner, acc.yy, acc.pGravity, acc.pVspeed
+    instance:destroy()
+
+    local newInstance = newItem:create(x, y)
+    newInstance.depth = 10
+  end
 end
+
+
+
 
 callback("onPlayerStep", function(player)
   local data = player:getData()
-  data.glitchItemFrame = (data.glitchItemFrame or 0) + glitchItem.settings.animateSpeed
-  if data.glitchItemFrame > glitchItem.settings.framesToAdd+1 then data.glitchItemFrame = 1 end
-  for _, itemData in ipairs(glitchItem.allItems) do
+  data.glitchHandlerFrame = (data.glitchHandlerFrame or 0) + glitchHandler.settings.animateSpeed
+  if data.glitchHandlerFrame > glitchHandler.settings.framesToAdd+1 then data.glitchHandlerFrame = 1 end
+  for _, itemData in ipairs(glitchHandler.allItems) do
     if player:countItem(itemData.item) > 0 then
-      player:setItemSprite(itemData.item, itemData.sprites[math.floor(data.glitchItemFrame)])
+      player:setItemSprite(itemData.item, itemData.sprites[math.floor(data.glitchHandlerFrame)])
       if math.chance(20) then
         player:setItemText(itemData.item, corruptString(itemData.trueDescription,33))
       end
     end
   end
-
+  if input.checkKeyboard("Q") == input.PRESSED then
+    for _, obj in ipairs(Object.findAll("vanilla")) do
+      for _, instance in ipairs(obj:findAll()) do
+        glitchHandler.corruptItem(instance)
+      end
+    end
+  end
+  if input.checkKeyboard("W") == input.HELD then
+    player.sprite = glitchAnimatedImage(player.sprite)
+  end
 end)
 
-callback("onPlayerDraw",function(player,x,y)
-  local itemtotest = "Life Savings"
-  --glitchItem.reassemble(glitchItem.splitSprite(Item.find(itemtotest).sprite)):draw(x, y - 20)
-end)
+--local allItems = Item.findAll()
+--for _, item in ipairs(allItems) do
+--  glitchHandler.makeItem(item)
+--  print("Made item: "..item.displayName)
+--end
+--print("surfaces made: "..surfacesMade..", equaling "..surfacesMade/#allItems.." per item for "..#allItems.." items.")
 
-iter = 1
+
+
+
+
+--[[iter = 1
+start = false
 local allItems = {}
 callback("onPlayerStep", function(player)
-  if iter < (#allItems) or #allItems == 0 then
-    iter = iter + 1
+  if input.checkKeyboard("Q") == input.PRESSED then start = true end
+  if start then
+    if iter < (#allItems) or #allItems == 0 then
+      iter = iter + 1
 
-    if #allItems == 0 then allItems = Item.findAll() end
-    glitchItem.make(allItems[iter])
-    print("Made item: "..allItems[iter].displayName)
+      if #allItems == 0 then allItems = Item.findAll() end
+      glitchHandler.makeItem(allItems[iter])
+      print("Made item: "..allItems[iter].displayName)
+    end
+    if input.checkKeyboard("V") == input.PRESSED then
+      table.random(glitchHandler.allItems).item:create(player.x,player.y)
+    end
   end
-  if input.checkKeyboard("V") == input.PRESSED then
-    table.random(glitchItem.allItems).item:create(player.x,player.y)
-  end
-end)
+end)]]
