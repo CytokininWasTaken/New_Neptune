@@ -91,6 +91,7 @@ local glitchHandler = {
   allItems = {},
   settings = {hSplit = 3, vSplit = 6, framesToAdd = 7, animateSpeed = 0.1, glitchPrefix = "Entropic "},
   allGlitchSprites = {},
+  glitchPlayerSprites = {},
 }
 
 function glitchHandler.splitSprite(rawSprite)
@@ -289,8 +290,11 @@ function glitchHandler.glitchAnimatedImage(image)
     tSurface:clear()
 
 
-    if not newSprite then newSprite = "" end
+    if not newSprite then newSprite = glitchHandler.glitchFrame(glitchHandler.splitSprite(sprite),{x=xOrigin,y=yOrigin},tSurface,0,newSprite) end
   end
+  local made = newSprite:finalise("NN_GlitchPlayer_"..#glitchHandler.glitchPlayerSprites)
+  table.insert(glitchHandler.glitchPlayerSprites, made)
+  return made
 end
 
 glitchHandler.glitchBurstParticle = ParticleType.new("glitchBurstParticle")
@@ -336,8 +340,13 @@ callback("onPlayerStep", function(player)
       end
     end
   end
-  if input.checkKeyboard("W") == input.HELD then
-    player.sprite = glitchAnimatedImage(player.sprite)
+  if input.checkKeyboard("W") == input.PRESSED then
+    local keys = {
+      "idle", "walk",
+    }
+    for _, val in ipairs(keys) do
+      player:setAnimation(val, glitchHandler.glitchAnimatedImage(player:getAnimation(val)))
+    end
   end
 end)
 
