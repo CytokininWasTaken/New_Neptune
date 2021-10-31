@@ -266,37 +266,6 @@ function glitchHandler.updateItemCounts(player)
 
 end
 
-function glitchHandler.glitchAnimatedImage(image)
-  local separatedImages = {}
-  local xOrigin, yOrigin = image.xorigin, image.yorigin
-  local tSurface = Surface.new(image.width,image.height)
-  for i = 1, image.frames do
-    tSurface:clear()
-    graphics.setTarget(tSurface)
-
-    graphics.drawImage{
-      image = image,
-      x = xOrigin, y = yOrigin,
-      subimage = i,
-    }
-
-    table.insert(separatedImages, tSurface:createSprite(xOrigin,yOrigin))
-    graphics.resetTarget()
-    tSurface:clear()
-  end
-  local newSprite
-  for k, sprite in ipairs(separatedImages) do
-    graphics.setTarget(tSurface)
-    tSurface:clear()
-
-
-    if not newSprite then newSprite = glitchHandler.glitchFrame(glitchHandler.splitSprite(sprite),{x=xOrigin,y=yOrigin},tSurface,0,newSprite) end
-  end
-  local made = newSprite:finalise("NN_GlitchPlayer_"..#glitchHandler.glitchPlayerSprites)
-  table.insert(glitchHandler.glitchPlayerSprites, made)
-  return made
-end
-
 glitchHandler.glitchBurstParticle = ParticleType.new("glitchBurstParticle")
 local t = glitchHandler.glitchBurstParticle
 t:shape("disc")
@@ -318,9 +287,6 @@ function glitchHandler.corruptItem(instance)
   end
 end
 
-
-
-
 callback("onPlayerStep", function(player)
   local data = player:getData()
   data.glitchHandlerFrame = (data.glitchHandlerFrame or 0) + glitchHandler.settings.animateSpeed
@@ -340,21 +306,22 @@ callback("onPlayerStep", function(player)
       end
     end
   end
-  if input.checkKeyboard("W") == input.PRESSED then
-    local keys = {
-      "idle", "walk",
-    }
-    for _, val in ipairs(keys) do
-      player:setAnimation(val, glitchHandler.glitchAnimatedImage(player:getAnimation(val)))
-    end
-  end
 end)
 
---local allItems = Item.findAll()
---for _, item in ipairs(allItems) do
---  glitchHandler.makeItem(item)
---  print("Made item: "..item.displayName)
---end
+local allItems = Item.findAll()
+for _, item in ipairs(allItems) do
+  glitchHandler.makeItem(item)
+  --print("Made item: "..item.displayName)
+end
+
+
+
+
+
+
+
+
+
 --print("surfaces made: "..surfacesMade..", equaling "..surfacesMade/#allItems.." per item for "..#allItems.." items.")
 
 
@@ -379,3 +346,23 @@ callback("onPlayerStep", function(player)
     end
   end
 end)]]
+
+--[[function glitchHandler.glitchAnimatedImage(image)
+  local separatedImages = {}
+  local xOrigin, yOrigin = image.xorigin, image.yorigin
+  local tSurface = Surface.new(image.width,image.height)
+  for i = 1, image.frames do
+    table.insert(separatedImages,getSpriteFrame(image,i))
+  end
+  local newSprite
+  for k, sprite in ipairs(separatedImages) do
+    graphics.setTarget(tSurface)
+    tSurface:clear()
+
+
+    if not newSprite then newSprite = glitchHandler.glitchFrame(glitchHandler.splitSprite(sprite),{x=xOrigin,y=yOrigin},tSurface,0,newSprite) end
+  end
+  local made = newSprite:finalise("NN_GlitchPlayer_"..#glitchHandler.glitchPlayerSprites)
+  table.insert(glitchHandler.glitchPlayerSprites, made)
+  return made
+end]]

@@ -3,93 +3,78 @@ item.pickupText = "Gain the ability to swim!\nUse to empty the flippers, creatin
 
 item.sprite = Sprite.load("items/spr/flippers.png", 2, 15, 15)
 item.isUseItem = true
-item.useCooldown = 40
+item.useCooldown = 30
 item:setTier("use")
 
-local waterSink = function(target, height, player)
-  target.y = target.y + 5
-  if target.y > player.y + 400 then
-    target:destroy()
-  end
-end
+local res = {
+  waterObj = Object.find("Water"),
+  waterfallObj = Object.find("Waterfall"),
+  waterInstances = {},
+  waterSpeed = 30,
+  waterAge = 7*60,
 
-local waterGrow = function(target, height, player)
-  if not target or not target:isValid() then return end
-  if target:get("done") ~= 1 then
-    if target.y > height then
-      target.y = target.y - 5
+}
+
+callback("onStep",function()
+  for i, waterInst in ipairs(res.waterInstances) do
+    local data = waterInst:getData()
+    print(waterInst,waterInst.x,waterInst.y,data.mode)
+    if data.mode == 1 then
+      waterInst.y = math.max(waterInst.y - res.waterSpeed,data.riseHeight)
+      if waterInst.y == data.riseHeight then data.mode = 2 end
+    elseif data.mode == 2 then
+      data.age = (data.age or 0) + 1
+      if data.age >= res.waterAge then data.mode = 3 end
+    elseif data.mode == 3 then
+      waterInst.y = waterInst.y + res.waterSpeed * 3
+      if waterInst.y > 4000 then
+        table.remove(res.waterInstances,i)
+        waterInst:destroy()
+      end
     end
-    if target.y <= height then
-      target:set("done", 1)
-    end
   end
 
-  if target:get("done") == 1 and target:get("donedone") ~= 1 then
-    if target:get("age") == nil then
-      target:set("age", 0)
-    elseif target:get("age") < 600 then
-      target:set("age", target:get("age") + 1)
-    elseif target:get("age") >= 300 then
-      target:set("donedone", 1)
-    end
-  end
 
-  if target:get("donedone") == 1 then
-    waterSink(target, height, player)
-  end
-end
-
-local swimEff = function(player, type, factor)
-  player:set("pVspeed", -5 * factor):set("swimCD", 20)
-  for i = 1, 5 do
-    ParticleType.find("Bubble", "vanilla"):burst("above", player.x + 1 * math.random(i, i*2), player.y + 1 * math.random(i*2), 10)
-    player:set("lastswim", type)
-  end
-end
-
-item:addCallback("use", function(player, embryo)
-  if SpawnedWaterInst and SpawnedWaterInst:isValid() then
-    SpawnedWaterInst:destroy()
-  end
-
-  local times = 1
-
-  if embryo then
-    times = times + 1
-  end
-
-  SpawnedWaterInst = Object.find("Water"):create(player.x, player.y + 400)
-  SpawnedWaterTarget = player.y
-
-  if embryo then
-    SpawnedWaterTarget = player.y - 100
-  end
 end)
 
-registercallback("onPlayerStep", function(player)
-  if player.useItem == item then
-    if SpawnedWaterInst and SpawnedWaterInst:isValid() then
-        waterGrow(SpawnedWaterInst, SpawnedWaterTarget, player)
+callback("onPlayerStep", function(player)
+  player.useItem = Item.find("Waterlogged Rocket-Flippers")
+  local data = player:getData()
+
+
+  for _, w in ipairs(res.waterObj:findAll()) do
+    if player.y >= w.y then data.inWater = true end
+  end
+  for _, w in ipairs(res.waterfallObj:findAll()) do
+    local width = w:get("width_b")
+    if width == 10 then width = 1 end
+    if player.x >= w.x and player.y >= w.y and player.x <= w.x + 20 + 10*width and player.y <= w.y+15+w:get("height_b") then data.inWater = true end
+  end
+
+  if player.useItem == item or data.canSwim then
+    if data.swimCD == 0 and data.inWater then
+      if player:control("jump") == input.HELD then
+        player:set("pVspeed",-5)
+        data.swimCD = 20
+        for i = 1,5 do
+          particles.bubble:burst("above", player.x + math.random(-(i*2),(i*2)), player.y + math.random(-(i*2),(i*2)), 10)
+        end
       end
-
-    if player:get("swimCD") and player:get("swimCD") > 0 then
-      player:set("swimCD", player:get("swimCD") - 1)
-    elseif player:get("swimCD") == nil then
-        player:set("swimCD", 0)
-    end
-
-      local waterInst = Object.find("Water"):findNearest(player.x, player.y)
-
-      if waterInst and waterInst:isValid() and player.y >= waterInst.y and input.checkControl("jump", player) == input.HELD and player:get("swimCD") <= 0 then
-        swimEff(player, "Water", 1)
-
-      elseif Object.find("Waterfall"):findNearest(player.x, player.y) and player.x >= Object.find("Waterfall"):findNearest(player.x, player.y).x and player.x <= Object.find("Waterfall"):findNearest(player.x, player.y).x + 18 and input.checkControl("jump", player) == input.HELD and player:get("swimCD") <= 0 then
-        swimEff(player, "Waterfall", 0.8)
-      end
-      if waterInst and player:get("lastswim") == "Water" and waterInst:isValid() and player.y < waterInst.y and player:get("swimCD") > 0 then
-        player:set("pVspeed", -5):set("swimCD", 0)
+    else
+      data.swimCD = math.max((data.swimCD or 0)-1,0)
     end
   end
+  data.inWater = false
+end)
+
+--
+--pvspeed -5
+item:addCallback("use", function(player, embryo)
+  local waterInst = res.waterObj:create(player.x,player.y + 1000)
+  local data = waterInst:getData()
+  table.insert(res.waterInstances,waterInst)
+  data.riseHeight,data.mode = player.y - 20, 1
+  if embryo then data.riseHeight = data.riseHeight - 100 end
 end)
 
 
@@ -97,7 +82,7 @@ end)
 item:setLog{
 	group = "use",
 	description = "Gives the &b&passive ability to swim&!&. Use to &b&dump swimmable water&!& from the flippers.",
-	story = "Okay, these are really confusing. Somehow, they're filled with an infinite amount of water, or at least a seemingly infinite amount?\nI thought, however, that if anyone could make use out of these, it's you.",
+	story = "",
 	destination = "Prima Crater Hydroelectronics,\nKalmar II,\nNew Neptune",
 	date = "1/27/2002"
 }

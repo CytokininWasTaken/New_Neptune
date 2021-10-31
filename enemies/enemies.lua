@@ -1,3 +1,3 @@
-require("enemies.vagrant_worm")
+--require("enemies.vagrant_worm")
 
 print("Enemy module loaded.")

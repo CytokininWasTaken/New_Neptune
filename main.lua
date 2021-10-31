@@ -1,5 +1,6 @@
 require("globals")
 --require("spritecollistest")
+--require("saverun")
 
 if not modloader.checkFlag("NN_NoItems") then
   require("items.items")

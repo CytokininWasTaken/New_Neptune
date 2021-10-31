@@ -1,5 +1,5 @@
 local item = Item("Danger Insurance Contract")
-item.pickupText = "Narrowly dodging an attack heals you."
+item.pickupText = "Narrowly dodging an attack gives you money."
 item.sprite = Sprite.load("items/spr/insurancepaper.png", 1, 12, 15)
 item:setTier("common")
 local calcDistance = function(x1, y1, x2, y2) return math.sqrt((x2 - x1) ^ 2 + (y2 - y1) ^ 2) end

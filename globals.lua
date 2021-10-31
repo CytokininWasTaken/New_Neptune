@@ -1,8 +1,10 @@
+json = require("json")
 collisTesterSprite = Sprite.load("spr/collis", 1, 0, 0)
 blankbar = Sprite.load("spr/blankbar", 1, 1, 6)
 
 particles = {
   SporeOld = ParticleType.find("SporeOld"),
+  bubble = ParticleType.find("Bubble","vanilla"),
 }
 
 enemies = ParentObject.find("enemies")
